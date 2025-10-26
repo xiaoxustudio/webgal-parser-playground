@@ -1,5 +1,3 @@
-import SceneParser, { SCRIPT_CONFIG } from "webgal-parser";
-import parserMeta from "webgal-parser/package.json";
 import packagejson from "../package.json";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Flex from "antd/es/flex";
@@ -18,9 +16,13 @@ import LogoImage from "./assets/icon-192.png";
 import webgalTextHL from "./assets/hl.json";
 import { loadWASM, OnigScanner, OnigString } from "vscode-oniguruma";
 import { INITIAL, Registry, type IRawGrammar } from "vscode-textmate";
-import "./assets/theme.css";
 import { BulbOutlined, GithubOutlined } from "@ant-design/icons";
 import classNames from "classnames";
+import type { IParserData } from "./interface";
+import { Dropdown } from "antd";
+import "./assets/theme.css";
+
+const url = "https://data.jsdelivr.com/v1/package/npm/webgal-parser";
 
 async function liftOff(
 	editor: monaco.editor.IStandaloneCodeEditor,
@@ -133,21 +135,33 @@ async function liftOff(
 	});
 }
 
-const WebgalParser = new SceneParser(
-	() => {},
-	(fileName: string) => fileName,
-	[],
-	SCRIPT_CONFIG
-);
-
 function App() {
-	const currentText = {
-		value: defaultTextString
-	};
+	const currentText = useRef(defaultTextString);
+	const WebgalParser = useRef(null as any); // 实例
 
-	const [theme, setTheme] = useState("light");
+	const [loading, setLoading] = useState(true); // 加载状态
+	const [version, setVersion] = useState(""); // 版本文本
+	const urlString = useMemo(
+		() =>
+			!version
+				? ""
+				: `https://cdn.jsdelivr.net/npm/webgal-parser@${version}/build/es/index.js`,
+		[version]
+	);
+	const [theme, setTheme] = useState("light"); // 主题
+	const [parserList, setParserList] = useState<string[]>([]); // 版本列表
+	const itemsList = useMemo(
+		() =>
+			parserList.map((i, ind) => ({
+				key: i + ind,
+				label: i,
+				onClick: () => setVersion(i)
+			})),
+		[parserList]
+	);
+
 	const [parserData, setParserData] = useState({});
-	const [parseTime, setParseTime] = useState(0);
+	const [parseTime, setParseTime] = useState(0); // 耗时
 
 	const parseDataString = useMemo(
 		() => JSON.stringify(parserData, null, 2),
@@ -155,8 +169,6 @@ function App() {
 	);
 
 	const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-
-	const updateEditData = () => {};
 
 	/**
 	 * 处理挂载事件
@@ -166,22 +178,44 @@ function App() {
 		monaco: Monaco
 	) {
 		editorRef.current = editor;
-		liftOff(editor, monaco).then(() => updateEditData());
+		liftOff(editor, monaco);
 	}
 
 	function parseValue(val: string) {
+		if (!WebgalParser.current) return;
 		const startTime = performance.now();
-		const p = WebgalParser.parse(val, "test", "");
+		const p = WebgalParser.current.parse(val, "test", "");
 		setParserData(p);
 		setParseTime(performance.now() - startTime);
 	}
 
 	function onChangeData(value?: string) {
 		if (value) {
-			currentText.value = value;
+			currentText.current = value;
 			parseValue(value);
 		}
 	}
+
+	useEffect(() => {
+		if (!urlString) return;
+		setLoading(true);
+		import(urlString)
+			.then((data) => {
+				WebgalParser.current = new data.default(
+					() => {},
+					(fileName: string) => fileName,
+					[],
+					data.SCRIPT_CONFIG
+				);
+				// 重新解析
+				parseValue(currentText.current);
+				setLoading(false);
+			})
+			.catch(() => {
+				setLoading(false);
+			});
+	}, [urlString]);
+
 	useEffect(() => {
 		if (editorRef.current) {
 			editorRef.current.updateOptions({
@@ -195,24 +229,17 @@ function App() {
 	}, [theme]);
 
 	useEffect(() => {
-		const handleVisibilityChange = () => {
-			if (document.visibilityState === "visible") {
-				updateEditData();
-			}
-		};
+		parseValue(currentText.current);
 
-		window.addEventListener("focus", handleVisibilityChange);
-		document.addEventListener("visibilitychange", handleVisibilityChange);
-
-		parseValue(currentText.value);
-		return () => {
-			window.removeEventListener("focus", handleVisibilityChange);
-			document.removeEventListener(
-				"visibilitychange",
-				handleVisibilityChange
-			);
-		};
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
+		setLoading(true);
+		fetch(url)
+			.then((res) => res.json())
+			.then((data: IParserData) => {
+				setParserList(data.versions);
+				setVersion(data.tags.latest);
+				setLoading(false);
+			});
+	}, []);
 
 	return (
 		<Layout style={{ height: "100vh" }}>
@@ -245,9 +272,21 @@ function App() {
 						<Button type="text" size="large">
 							耗时:{parseTime.toFixed(2)}ms
 						</Button>
-						<Button type="text" size="large">
-							解析器版本：{parserMeta.version}
-						</Button>
+
+						<Dropdown.Button
+							menu={{
+								items: itemsList,
+								style: {
+									maxHeight: "300px",
+									overflowY: "auto"
+								}
+							}}
+							loading={loading}
+							type="text"
+							size="large"
+						>
+							解析器版本：{loading ? "加载中" : version}
+						</Dropdown.Button>
 						<Button
 							type="text"
 							onClick={() =>
@@ -288,7 +327,7 @@ function App() {
 							onChange={onChangeData}
 							defaultLanguage="webgal"
 							language="webgal"
-							defaultValue={currentText.value}
+							defaultValue={currentText.current}
 							height="100%"
 							width="100%"
 						/>

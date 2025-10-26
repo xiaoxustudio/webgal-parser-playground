@@ -25,8 +25,7 @@
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",
 		"vscode-oniguruma": "^2.0.1",
-		"vscode-textmate": "^9.2.1",
-		"webgal-parser": "^4.5.16"
+		"vscode-textmate": "^9.2.1"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.36.0",
