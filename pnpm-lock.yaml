@@ -26,6 +26,12 @@ importers:
       react-dom:
         specifier: ^19.1.1
         version: 19.2.0(react@19.2.0)
+      vscode-oniguruma:
+        specifier: ^2.0.1
+        version: 2.0.1
+      vscode-textmate:
+        specifier: ^9.2.1
+        version: 9.2.1
       webgal-parser:
         specifier: ^4.5.16
         version: 4.5.16
@@ -1814,6 +1820,12 @@ packages:
       yaml:
         optional: true
 
+  vscode-oniguruma@2.0.1:
+    resolution: {integrity: sha512-poJU8iHIWnC3vgphJnrLZyI3YdqRlR27xzqDmpPXYzA93R4Gk8z7T6oqDzDoHjoikA2aS82crdXFkjELCdJsjQ==}
+
+  vscode-textmate@9.2.1:
+    resolution: {integrity: sha512-eXiUi2yYFv9bdvgrYtJynA7UemCEkpVNE50S9iBBA08LYG5t9+/TB+8IRS/YoYOubCez2OkSyZ1Q12eQMwzbrw==}
+
   webgal-parser@4.5.16:
     resolution: {integrity: sha512-b4jVnJFj5k93dZiUeEpAvkBtjiKkbnjcsBFxV2SeJZP35hckMpBHqHPEpZLnhp2Lged0K/drIY2NbqB2ATSakg==}
 
@@ -3582,6 +3594,10 @@ snapshots:
     optionalDependencies:
       '@types/node': 24.9.1
       fsevents: 2.3.3
+
+  vscode-oniguruma@2.0.1: {}
+
+  vscode-textmate@9.2.1: {}
 
   webgal-parser@4.5.16:
     dependencies:

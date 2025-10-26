@@ -12,7 +12,99 @@ import whiteTheme from "./assets/white.json";
 import defaultTextString from "./assets/demo_zh_cn.txt?raw";
 import LogoImage from "./assets/icon-192.png";
 
+import webgalTextHL from "./assets/hl.json";
+
+import { loadWASM, OnigScanner, OnigString } from "vscode-oniguruma";
+import { INITIAL, Registry, type IRawGrammar } from "vscode-textmate";
 import "./assets/theme.css";
+
+// todo : 控制台 monaco-textmate 报错
+
+async function liftOff(
+	editor: monaco.editor.IStandaloneCodeEditor,
+	monaco: Monaco
+) {
+	monaco.languages.register({
+		id: "webgal",
+		extensions: [".txt"],
+		aliases: ["WebGAL", "WebGAL Script"],
+		mimetypes: ["application/webgalscript"]
+	});
+
+	await loadWASM({
+		data: await fetch("/webgal-parser-playground/onig.wasm").then((res) =>
+			res.arrayBuffer()
+		)
+	});
+	const vscodeOnigurumaLib = Promise.resolve({
+		createOnigScanner(patterns: string[]) {
+			return new OnigScanner(patterns);
+		},
+		createOnigString(s: string) {
+			return new OnigString(s);
+		}
+	});
+
+	const registry = new Registry({
+		onigLib: vscodeOnigurumaLib,
+		loadGrammar: (scopeName) => {
+			if (scopeName === "source.webgal") {
+				return Promise.resolve(webgalTextHL as unknown as IRawGrammar);
+			}
+			console.log(`Unknown scope name: ${scopeName}`);
+			return Promise.resolve(null);
+		}
+	});
+
+	monaco.editor.defineTheme("webgal-theme", {
+		...whiteTheme,
+		base: "vs"
+	});
+
+	const grammar = await registry.loadGrammar("source.webgal");
+	monaco.languages.setTokensProvider("webgal", {
+		getInitialState: () => INITIAL,
+		tokenize: (line: string, state: any) => {
+			if (!grammar) return state;
+			const res = grammar.tokenizeLine(line, state.ruleStack);
+
+			const tokens = res.tokens.map((token) => ({
+				startIndex: token.startIndex,
+				scopes: token.scopes[token.scopes.length - 1]
+			}));
+
+			return {
+				endState: res.ruleStack,
+				tokens: tokens
+			};
+		}
+	});
+
+	monaco.languages.setLanguageConfiguration("webgal", {
+		comments: {
+			lineComment: ";"
+		},
+		brackets: [
+			["{", "}"],
+			["[", "]"],
+			["(", ")"]
+		],
+		autoClosingPairs: [
+			{ open: "{", close: "}" },
+			{ open: "[", close: "]" },
+			{ open: "(", close: ")" }
+		]
+	});
+	editor.updateOptions({
+		unicodeHighlight: { ambiguousCharacters: false },
+		wordWrap: "off",
+		smoothScrolling: true,
+		fontSize: 14,
+		tabSize: 2,
+		insertSpaces: true,
+		theme: "webgal-theme"
+	});
+}
 
 const WebgalParser = new SceneParser(
 	() => {},
@@ -46,39 +138,7 @@ function App() {
 		monaco: Monaco
 	) {
 		editorRef.current = editor;
-
-		monaco.editor.defineTheme("webgal-theme", {
-			...whiteTheme,
-			base: "vs"
-		});
-
-		monaco.languages.setLanguageConfiguration("webgal", {
-			comments: {
-				lineComment: ";"
-			},
-			brackets: [
-				["{", "}"],
-				["[", "]"],
-				["(", ")"]
-			],
-			autoClosingPairs: [
-				{ open: "{", close: "}" },
-				{ open: "[", close: "]" },
-				{ open: "(", close: ")" }
-			]
-		});
-
-		editor.updateOptions({
-			unicodeHighlight: { ambiguousCharacters: false },
-			wordWrap: "off",
-			smoothScrolling: true,
-			fontSize: 14,
-			tabSize: 2,
-			insertSpaces: true,
-			theme: "webgal-theme"
-		});
-
-		updateEditData();
+		liftOff(editor, monaco).then(() => updateEditData());
 	}
 
 	function parseValue(val: string) {

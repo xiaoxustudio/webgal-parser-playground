@@ -14,8 +14,10 @@
 		"@vitejs/plugin-react-swc": "^4.2.0",
 		"antd": "^5.27.6",
 		"monaco-editor": "^0.54.0",
+		"vscode-oniguruma": "^2.0.1",
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",
+		"vscode-textmate": "^9.2.1",
 		"webgal-parser": "^4.5.16"
 	},
 	"devDependencies": {
