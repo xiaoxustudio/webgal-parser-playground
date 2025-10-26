@@ -250,16 +250,6 @@ function App() {
 						</Button>
 						<Button
 							type="text"
-							onClick={() => window.open(packagejson.homepage)}
-							size="large"
-							style={{
-								fontSize: "20px"
-							}}
-						>
-							<GithubOutlined />
-						</Button>
-						<Button
-							type="text"
 							onClick={() =>
 								setTheme(theme === "dark" ? "light" : "dark")
 							}
@@ -269,6 +259,16 @@ function App() {
 							}}
 						>
 							<BulbOutlined />
+						</Button>
+						<Button
+							type="text"
+							onClick={() => window.open(packagejson.homepage)}
+							size="large"
+							style={{
+								fontSize: "20px"
+							}}
+						>
+							<GithubOutlined />
 						</Button>
 					</Flex>
 				</Flex>
