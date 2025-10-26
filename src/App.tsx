@@ -1,5 +1,6 @@
 import SceneParser, { SCRIPT_CONFIG } from "webgal-parser";
 import parserMeta from "webgal-parser/package.json";
+import packagejson from "../package.json";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Flex from "antd/es/flex";
 import Layout from "antd/es/layout";
@@ -8,17 +9,18 @@ import Button from "antd/es/button";
 import Editor, { type Monaco } from "@monaco-editor/react";
 import { Header, Content } from "antd/es/layout/layout";
 import * as monaco from "monaco-editor";
+
 import whiteTheme from "./assets/white.json";
+import darkTheme from "./assets/dark.json";
 import defaultTextString from "./assets/demo_zh_cn.txt?raw";
 import LogoImage from "./assets/icon-192.png";
 
 import webgalTextHL from "./assets/hl.json";
-
 import { loadWASM, OnigScanner, OnigString } from "vscode-oniguruma";
 import { INITIAL, Registry, type IRawGrammar } from "vscode-textmate";
 import "./assets/theme.css";
-
-// todo : 控制台 monaco-textmate 报错
+import { BulbOutlined, GithubOutlined } from "@ant-design/icons";
+import classNames from "classnames";
 
 async function liftOff(
 	editor: monaco.editor.IStandaloneCodeEditor,
@@ -59,6 +61,31 @@ async function liftOff(
 	monaco.editor.defineTheme("webgal-theme", {
 		...whiteTheme,
 		base: "vs"
+	});
+
+	// 处理暗色模式
+	const rules = [] as monaco.editor.ITokenThemeRule[];
+	darkTheme.tokenColors.forEach((tk) => {
+		if (Array.isArray(tk.scope))
+			tk.scope.forEach((scope) => {
+				rules.push({
+					token: scope,
+					foreground: tk.settings.foreground
+				});
+			});
+		else
+			rules.push({
+				token: tk.scope,
+				foreground: tk.settings.foreground
+			});
+	});
+
+	monaco.editor.defineTheme("webgal-theme-dark", {
+		base: "vs-dark",
+		inherit: false,
+		encodedTokensColors: [],
+		colors: darkTheme.colors,
+		rules
 	});
 
 	const grammar = await registry.loadGrammar("source.webgal");
@@ -118,6 +145,7 @@ function App() {
 		value: defaultTextString
 	};
 
+	const [theme, setTheme] = useState("light");
 	const [parserData, setParserData] = useState({});
 	const [parseTime, setParseTime] = useState(0);
 
@@ -154,6 +182,17 @@ function App() {
 			parseValue(value);
 		}
 	}
+	useEffect(() => {
+		if (editorRef.current) {
+			editorRef.current.updateOptions({
+				theme: theme === "dark" ? "webgal-theme-dark" : "webgal-theme"
+			});
+		}
+		// 设置根元素的class
+		document.documentElement.className = classNames({
+			dark: theme === "dark"
+		});
+	}, [theme]);
 
 	useEffect(() => {
 		const handleVisibilityChange = () => {
@@ -181,8 +220,7 @@ function App() {
 				style={{
 					display: "flex",
 					alignItems: "center",
-					background: "#f0f0f0",
-					borderBottom: "1px solid #d9d9d9"
+					background: "var(--webgal-playground-background)"
 				}}
 			>
 				<Flex
@@ -203,14 +241,36 @@ function App() {
 						</h2>
 					</Content>
 					<Content> </Content>
-					<Content>
-						<Button type="text">
+					<Flex justify="right">
+						<Button type="text" size="large">
 							耗时:{parseTime.toFixed(2)}ms
 						</Button>
-						<Button type="text">
+						<Button type="text" size="large">
 							解析器版本：{parserMeta.version}
 						</Button>
-					</Content>
+						<Button
+							type="text"
+							onClick={() => window.open(packagejson.homepage)}
+							size="large"
+							style={{
+								fontSize: "20px"
+							}}
+						>
+							<GithubOutlined />
+						</Button>
+						<Button
+							type="text"
+							onClick={() =>
+								setTheme(theme === "dark" ? "light" : "dark")
+							}
+							size="large"
+							style={{
+								fontSize: "20px"
+							}}
+						>
+							<BulbOutlined />
+						</Button>
+					</Flex>
 				</Flex>
 			</Header>
 			<Splitter>
@@ -247,7 +307,7 @@ function App() {
 							defaultLanguage="json"
 							language="json"
 							value={parseDataString}
-							height="95%"
+							height="100%"
 							width="100%"
 						/>
 					</Content>

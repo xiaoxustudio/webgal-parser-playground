@@ -1,5 +1,4 @@
 {
-	"$schema": "vscode://schemas/color-theme",
 	"name": "Dark (Visual Studio)",
 	"colors": {
 		"editor.inactiveSelectionBackground": "#3a3d4186",
@@ -143,72 +142,58 @@
 		"titleBar.inactiveForeground": "#9D9D9D",
 		"welcomePage.tileBackground": "#2B2B2B",
 		"welcomePage.progress.foreground": "#0078D4",
-		"widget.border": "#313131",
+		"widget.border": "#313131"
 	},
 	"tokenColors": [
 		{
-      "scope": [
-        "comment",
-        "comment.line.webgal"
-      ],
-      "settings": {
-        "foreground": "#757575"
-      }
-    },
+			"scope": ["comment", "comment.line.webgal"],
+			"settings": {
+				"foreground": "#757575"
+			}
+		},
 		{
-      "scope": [
-        "keyword.operator.webgal"
-      ],
-      "settings": {
-        "foreground": "#ff2c80",
-        "fontStyle": "bold"
-      }
-    },
-    {
-      "scope": [
-        "string.unquoted.utterance.webgal"
-      ],
-      "settings": {
-        "foreground": "#e6dd7e",
-        "fontStyle": "bold"
-      }
-    },
-    {
-      "scope": [
-        "meta.command.webgal",
-        "support.function.command.webgal"
-      ],
-      "settings": {
-        "foreground": "#5feaff",
-        "fontStyle": "bold"
-      }
-    },
-    {
-      "scope": [
-        "meta.character.webgal",
-        "entity.name.type.character.webgal"
-      ],
-      "settings": {
-        "foreground": "#ddff6f",
+			"scope": ["keyword.operator.webgal"],
+			"settings": {
+				"foreground": "#ff2c80",
+				"fontStyle": "bold"
+			}
+		},
+		{
+			"scope": ["string.unquoted.utterance.webgal"],
+			"settings": {
+				"foreground": "#e6dd7e",
+				"fontStyle": "bold"
+			}
+		},
+		{
+			"scope": ["meta.command.webgal", "support.function.command.webgal"],
+			"settings": {
+				"foreground": "#5feaff",
+				"fontStyle": "bold"
+			}
+		},
+		{
+			"scope": [
+				"meta.character.webgal",
+				"entity.name.type.character.webgal"
+			],
+			"settings": {
+				"foreground": "#ddff6f",
 				"fontStyle": "bold underline"
-      }
-    },
-    {
-      "scope": [
-        "variable.parameter.webgal",
-      ],
-      "settings": {
-        "foreground": "#ffb84a",
-      }
-    },
-    {
-      "scope": [
-        "variable.other.webgal",
-      ],
-      "settings": {
-        "foreground": "#6ef48f",
-      }
-    },
+			}
+		},
+		{
+			"scope": ["variable.parameter.webgal"],
+			"settings": {
+				"foreground": "#ffb84a"
+			}
+		},
+		{
+			"scope": ["variable.other.webgal"],
+			"settings": {
+				"foreground": "#6ef48f"
+			}
+		},
 		{
 			"scope": [
 				"meta.embedded",
@@ -274,10 +259,7 @@
 			}
 		},
 		{
-			"scope": [
-				"entity.name.tag.css",
-				"entity.name.tag.less"
-			],
+			"scope": ["entity.name.tag.css", "entity.name.tag.less"],
 			"settings": {
 				"foreground": "#d7ba7d"
 			}
@@ -386,10 +368,7 @@
 			}
 		},
 		{
-			"scope": [
-				"meta.preprocessor",
-				"entity.name.function.preprocessor"
-			],
+			"scope": ["meta.preprocessor", "entity.name.function.preprocessor"],
 			"settings": {
 				"foreground": "#569cd6"
 			}
@@ -431,19 +410,13 @@
 			}
 		},
 		{
-			"scope": [
-				"storage.modifier",
-				"keyword.operator.noexcept"
-			],
+			"scope": ["storage.modifier", "keyword.operator.noexcept"],
 			"settings": {
 				"foreground": "#569cd6"
 			}
 		},
 		{
-			"scope": [
-				"string",
-				"meta.embedded.assembly"
-			],
+			"scope": ["string", "meta.embedded.assembly"],
 			"settings": {
 				"foreground": "#ce9178"
 			}
@@ -479,9 +452,7 @@
 		},
 		{
 			"name": "Reset JavaScript string interpolation expression",
-			"scope": [
-				"meta.template.expression"
-			],
+			"scope": ["meta.template.expression"],
 			"settings": {
 				"foreground": "#d4d4d4"
 			}
@@ -584,7 +555,7 @@
 				"support.function",
 				"support.constant.handlebars",
 				"source.powershell variable.other.member",
-				"entity.name.operator.custom-literal" // See https://en.cppreference.com/w/cpp/language/user_literal
+				"entity.name.operator.custom-literal"
 			],
 			"settings": {
 				"foreground": "#DCDCAA"
@@ -667,7 +638,7 @@
 				"meta.definition.variable.name",
 				"support.variable",
 				"entity.name.variable",
-				"constant.other.placeholder", // placeholders in strings
+				"constant.other.placeholder"
 			],
 			"settings": {
 				"foreground": "#9CDCFE"
@@ -675,19 +646,14 @@
 		},
 		{
 			"name": "Constants and enums",
-			"scope": [
-				"variable.other.constant",
-				"variable.other.enummember"
-			],
+			"scope": ["variable.other.constant", "variable.other.enummember"],
 			"settings": {
-				"foreground": "#4FC1FF",
+				"foreground": "#4FC1FF"
 			}
 		},
 		{
 			"name": "Object keys, TS grammar specific",
-			"scope": [
-				"meta.object-literal.key"
-			],
+			"scope": ["meta.object-literal.key"],
 			"settings": {
 				"foreground": "#9CDCFE"
 			}
@@ -749,10 +715,7 @@
 			}
 		},
 		{
-			"scope": [
-				"constant.character",
-				"constant.other.option"
-			],
+			"scope": ["constant.character", "constant.other.option"],
 			"settings": {
 				"foreground": "#569cd6"
 			}
@@ -772,9 +735,9 @@
 	],
 	"semanticHighlighting": true,
 	"semanticTokenColors": {
-		"newOperator":"#C586C0",
-		"stringLiteral":"#ce9178",
+		"newOperator": "#C586C0",
+		"stringLiteral": "#ce9178",
 		"customLiteral": "#DCDCAA",
-		"numberLiteral": "#b5cea8",
+		"numberLiteral": "#b5cea8"
 	}
 }
