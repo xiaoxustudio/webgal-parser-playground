@@ -4,136 +4,34 @@ import Flex from "antd/es/flex";
 import Layout from "antd/es/layout";
 import Splitter from "antd/es/splitter";
 import Button from "antd/es/button";
-import Editor, { type Monaco } from "@monaco-editor/react";
 import { Header, Content } from "antd/es/layout/layout";
-import * as monaco from "monaco-editor";
+import { BulbOutlined, GithubOutlined } from "@ant-design/icons";
 
-import whiteTheme from "./assets/white.json";
-import darkTheme from "./assets/dark.json";
+import * as monaco from "monaco-editor";
+import Editor, { loader, type Monaco } from "@monaco-editor/react";
+import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
+import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
+import { initMonaco } from "./monoca";
+
+import classNames from "classnames";
+import { Dropdown } from "antd";
+import type { IParserData } from "./interface";
 import defaultTextString from "./assets/demo_zh_cn.txt?raw";
 import LogoImage from "./assets/icon-192.png";
-
-import webgalTextHL from "./assets/hl.json";
-import { loadWASM, OnigScanner, OnigString } from "vscode-oniguruma";
-import { INITIAL, Registry, type IRawGrammar } from "vscode-textmate";
-import { BulbOutlined, GithubOutlined } from "@ant-design/icons";
-import classNames from "classnames";
-import type { IParserData } from "./interface";
-import { Dropdown } from "antd";
 import "./assets/theme.css";
 
 const url = "https://data.jsdelivr.com/v1/package/npm/webgal-parser";
 
-async function liftOff(
-	editor: monaco.editor.IStandaloneCodeEditor,
-	monaco: Monaco
-) {
-	monaco.languages.register({
-		id: "webgal",
-		extensions: [".txt"],
-		aliases: ["WebGAL", "WebGAL Script"],
-		mimetypes: ["application/webgalscript"]
-	});
-
-	await loadWASM({
-		data: await fetch("/webgal-parser-playground/onig.wasm").then((res) =>
-			res.arrayBuffer()
-		)
-	});
-	const vscodeOnigurumaLib = Promise.resolve({
-		createOnigScanner(patterns: string[]) {
-			return new OnigScanner(patterns);
-		},
-		createOnigString(s: string) {
-			return new OnigString(s);
+self.MonacoEnvironment = {
+	getWorker(_, label) {
+		if (label === "json") {
+			return new jsonWorker();
 		}
-	});
-
-	const registry = new Registry({
-		onigLib: vscodeOnigurumaLib,
-		loadGrammar: (scopeName) => {
-			if (scopeName === "source.webgal") {
-				return Promise.resolve(webgalTextHL as unknown as IRawGrammar);
-			}
-			console.log(`Unknown scope name: ${scopeName}`);
-			return Promise.resolve(null);
-		}
-	});
-
-	monaco.editor.defineTheme("webgal-theme", {
-		...whiteTheme,
-		base: "vs"
-	});
-
-	// 处理暗色模式
-	const rules = [] as monaco.editor.ITokenThemeRule[];
-	darkTheme.tokenColors.forEach((tk) => {
-		if (Array.isArray(tk.scope))
-			tk.scope.forEach((scope) => {
-				rules.push({
-					token: scope,
-					foreground: tk.settings.foreground
-				});
-			});
-		else
-			rules.push({
-				token: tk.scope,
-				foreground: tk.settings.foreground
-			});
-	});
-
-	monaco.editor.defineTheme("webgal-theme-dark", {
-		base: "vs-dark",
-		inherit: false,
-		encodedTokensColors: [],
-		colors: darkTheme.colors,
-		rules
-	});
-
-	const grammar = await registry.loadGrammar("source.webgal");
-	monaco.languages.setTokensProvider("webgal", {
-		getInitialState: () => INITIAL,
-		tokenize: (line: string, state: any) => {
-			if (!grammar) return state;
-			const res = grammar.tokenizeLine(line, state.ruleStack);
-
-			const tokens = res.tokens.map((token) => ({
-				startIndex: token.startIndex,
-				scopes: token.scopes[token.scopes.length - 1]
-			}));
-
-			return {
-				endState: res.ruleStack,
-				tokens: tokens
-			};
-		}
-	});
-
-	monaco.languages.setLanguageConfiguration("webgal", {
-		comments: {
-			lineComment: ";"
-		},
-		brackets: [
-			["{", "}"],
-			["[", "]"],
-			["(", ")"]
-		],
-		autoClosingPairs: [
-			{ open: "{", close: "}" },
-			{ open: "[", close: "]" },
-			{ open: "(", close: ")" }
-		]
-	});
-	editor.updateOptions({
-		unicodeHighlight: { ambiguousCharacters: false },
-		wordWrap: "off",
-		smoothScrolling: true,
-		fontSize: 14,
-		tabSize: 2,
-		insertSpaces: true,
-		theme: "webgal-theme"
-	});
-}
+		return new editorWorker();
+	}
+};
+loader.config({ monaco });
+loader.init();
 
 function App() {
 	const currentText = useRef(defaultTextString);
@@ -178,7 +76,7 @@ function App() {
 		monaco: Monaco
 	) {
 		editorRef.current = editor;
-		liftOff(editor, monaco);
+		initMonaco(editor, monaco);
 	}
 
 	function parseValue(val: string) {
@@ -199,7 +97,7 @@ function App() {
 	useEffect(() => {
 		if (!urlString) return;
 		setLoading(true);
-		import(urlString)
+		import(/* @vite-ignore */ urlString)
 			.then((data) => {
 				WebgalParser.current = new data.default(
 					() => {},
