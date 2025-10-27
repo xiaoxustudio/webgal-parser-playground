@@ -11,7 +11,11 @@ import * as monaco from "monaco-editor";
 import Editor, { loader, type Monaco } from "@monaco-editor/react";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
-import { initMonaco } from "./monoca";
+import {
+	findSentenceEndLine,
+	findSentencePosition,
+	initMonaco
+} from "./monoca";
 
 import classNames from "classnames";
 import { Dropdown } from "antd";
@@ -67,6 +71,20 @@ function App() {
 	);
 
 	const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+	const editorRightRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(
+		null
+	);
+
+	function initMonacoMouseMove(
+		editor: monaco.editor.IStandaloneCodeEditor,
+		isLeft: boolean = true
+	) {
+		if (isLeft) {
+			editor.onDidChangeCursorPosition((e) => {
+				locateInRightEditor(e.position.lineNumber);
+			});
+		}
+	}
 
 	/**
 	 * 处理挂载事件
@@ -77,6 +95,7 @@ function App() {
 	) {
 		editorRef.current = editor;
 		initMonaco(editor, monaco);
+		initMonacoMouseMove(editor);
 	}
 
 	function parseValue(val: string) {
@@ -93,6 +112,29 @@ function App() {
 			parseValue(value);
 		}
 	}
+
+	const locateInRightEditor = (lineNumber: number) => {
+		const rightEditor = editorRightRef.current;
+		if (!rightEditor) return;
+
+		const content = rightEditor.getValue();
+		// 使用行号直接定位
+		const position = findSentencePosition(content, lineNumber);
+		if (position) {
+			// 滚动
+			rightEditor.revealPositionInCenter(position);
+
+			const endLine = findSentenceEndLine(content, position.lineNumber);
+			const range = {
+				startLineNumber: position.lineNumber - 2,
+				startColumn: 1,
+				endLineNumber: endLine,
+				endColumn: 1
+			};
+
+			rightEditor.setSelection(range);
+		}
+	};
 
 	useEffect(() => {
 		if (!urlString) return;
@@ -241,6 +283,10 @@ function App() {
 						}}
 					>
 						<Editor
+							onMount={(editor) => {
+								editorRightRef.current = editor;
+								initMonacoMouseMove(editor, false);
+							}}
 							defaultLanguage="json"
 							language="json"
 							value={parseDataString}
