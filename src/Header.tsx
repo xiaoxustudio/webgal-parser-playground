@@ -16,7 +16,7 @@ export default function HeaderContent({
 	version: string;
 	itemsList: any[];
 }) {
-	const { theme, set, get } = useConfigStore();
+	const { theme, location, set, get } = useConfigStore();
 	const parseTimeStr = parseTime.toFixed(2);
 	return (
 		<Header
@@ -50,6 +50,7 @@ export default function HeaderContent({
 					</Button>
 					<Button type="text" size="large">
 						<Checkbox
+							checked={location}
 							onChange={() =>
 								set({ ...get(), location: !get().location })
 							}

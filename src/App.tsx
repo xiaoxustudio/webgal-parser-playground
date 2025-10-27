@@ -107,10 +107,8 @@ function App() {
 		if (!rightEditor) return;
 
 		const content = rightEditor.getValue();
-		// 使用行号直接定位
 		const position = findSentencePosition(content, lineNumber);
 		if (position) {
-			// 滚动
 			rightEditor.revealPositionInCenter(position);
 
 			const endLine = findSentenceEndLine(content, position.lineNumber);
@@ -135,9 +133,10 @@ function App() {
 				}
 			);
 		} else {
-			onDidRef.current.dispose();
+			onDidRef.current?.dispose();
+			onDidRef.current = null;
 		}
-	}, [location]);
+	}, [location, loading]);
 
 	useEffect(() => {
 		if (!urlString) return;
