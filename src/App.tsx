@@ -1,11 +1,7 @@
-import packagejson from "../package.json";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Flex from "antd/es/flex";
 import Layout from "antd/es/layout";
 import Splitter from "antd/es/splitter";
-import Button from "antd/es/button";
-import { Header, Content } from "antd/es/layout/layout";
-import { BulbOutlined, GithubOutlined } from "@ant-design/icons";
+import { Content } from "antd/es/layout/layout";
 
 import * as monaco from "monaco-editor";
 import Editor, { loader, type Monaco } from "@monaco-editor/react";
@@ -18,10 +14,10 @@ import {
 } from "./monoca";
 
 import classNames from "classnames";
-import { Dropdown } from "antd";
-import type { IParserData } from "./interface";
 import defaultTextString from "./assets/demo_zh_cn.txt?raw";
-import LogoImage from "./assets/icon-192.png";
+import HeaderContent from "./Header";
+import useConfigStore from "./useConfig";
+import type { IParserData } from "./interface";
 import "./assets/theme.css";
 
 const url = "https://data.jsdelivr.com/v1/package/npm/webgal-parser";
@@ -38,9 +34,11 @@ loader.config({ monaco });
 loader.init();
 
 function App() {
-	const currentText = useRef(defaultTextString);
-	const WebgalParser = useRef(null as any); // 实例
+	const { theme, location } = useConfigStore();
 
+	const currentText = useRef(defaultTextString);
+	const onDidRef = useRef(null as any);
+	const WebgalParser = useRef(null as any); // 实例
 	const [loading, setLoading] = useState(true); // 加载状态
 	const [version, setVersion] = useState(""); // 版本文本
 	const urlString = useMemo(
@@ -50,7 +48,6 @@ function App() {
 				: `https://cdn.jsdelivr.net/npm/webgal-parser@${version}/build/es/index.js`,
 		[version]
 	);
-	const [theme, setTheme] = useState("light"); // 主题
 	const [parserList, setParserList] = useState<string[]>([]); // 版本列表
 	const itemsList = useMemo(
 		() =>
@@ -75,17 +72,6 @@ function App() {
 		null
 	);
 
-	function initMonacoMouseMove(
-		editor: monaco.editor.IStandaloneCodeEditor,
-		isLeft: boolean = true
-	) {
-		if (isLeft) {
-			editor.onDidChangeCursorPosition((e) => {
-				locateInRightEditor(e.position.lineNumber);
-			});
-		}
-	}
-
 	/**
 	 * 处理挂载事件
 	 */
@@ -94,8 +80,11 @@ function App() {
 		monaco: Monaco
 	) {
 		editorRef.current = editor;
-		initMonaco(editor, monaco);
-		initMonacoMouseMove(editor);
+		initMonaco(editor, monaco).then(() =>
+			editor.updateOptions({
+				theme: theme === "dark" ? "webgal-theme-dark" : "webgal-theme"
+			})
+		);
 	}
 
 	function parseValue(val: string) {
@@ -135,6 +124,20 @@ function App() {
 			rightEditor.setSelection(range);
 		}
 	};
+
+	useEffect(() => {
+		if (!editorRef.current) return;
+
+		if (location) {
+			onDidRef.current = editorRef.current.onDidChangeCursorPosition(
+				(e) => {
+					locateInRightEditor(e.position.lineNumber);
+				}
+			);
+		} else {
+			onDidRef.current.dispose();
+		}
+	}, [location]);
 
 	useEffect(() => {
 		if (!urlString) return;
@@ -183,75 +186,12 @@ function App() {
 
 	return (
 		<Layout style={{ height: "100vh" }}>
-			<Header
-				style={{
-					display: "flex",
-					alignItems: "center",
-					background: "var(--webgal-playground-background)"
-				}}
-			>
-				<Flex
-					style={{ width: "100%" }}
-					justify="space-between"
-					align="center"
-				>
-					<Content>
-						<h2 style={{ color: "#b5495b" }}>
-							<img
-								style={{ verticalAlign: "middle" }}
-								src={LogoImage}
-								height="35"
-							/>
-							<span style={{ marginLeft: "10px" }}>
-								WebGAL Parser Playground
-							</span>
-						</h2>
-					</Content>
-					<Content> </Content>
-					<Flex justify="right">
-						<Button type="text" size="large">
-							耗时:{parseTime.toFixed(2)}ms
-						</Button>
-
-						<Dropdown.Button
-							menu={{
-								items: itemsList,
-								style: {
-									maxHeight: "300px",
-									overflowY: "auto"
-								}
-							}}
-							loading={loading}
-							type="text"
-							size="large"
-						>
-							解析器版本：{loading ? "加载中" : version}
-						</Dropdown.Button>
-						<Button
-							type="text"
-							onClick={() =>
-								setTheme(theme === "dark" ? "light" : "dark")
-							}
-							size="large"
-							style={{
-								fontSize: "20px"
-							}}
-						>
-							<BulbOutlined />
-						</Button>
-						<Button
-							type="text"
-							onClick={() => window.open(packagejson.homepage)}
-							size="large"
-							style={{
-								fontSize: "20px"
-							}}
-						>
-							<GithubOutlined />
-						</Button>
-					</Flex>
-				</Flex>
-			</Header>
+			<HeaderContent
+				loading={loading}
+				version={version}
+				itemsList={itemsList}
+				parseTime={parseTime}
+			/>
 			<Splitter>
 				<Splitter.Panel defaultSize="40%" min="20%" max="70%">
 					<Content
@@ -283,10 +223,9 @@ function App() {
 						}}
 					>
 						<Editor
-							onMount={(editor) => {
-								editorRightRef.current = editor;
-								initMonacoMouseMove(editor, false);
-							}}
+							onMount={(editor) =>
+								(editorRightRef.current = editor)
+							}
 							defaultLanguage="json"
 							language="json"
 							value={parseDataString}
