@@ -16,8 +16,12 @@ export default function HeaderContent({
 	version: string;
 	itemsList: any[];
 }) {
-	const { theme, location, set, get } = useConfigStore();
+	const { theme, location, change } = useConfigStore();
 	const parseTimeStr = parseTime.toFixed(2);
+	const submit = (name: string, val: any) => {
+		change(name, val);
+	};
+
 	return (
 		<Header
 			style={{
@@ -51,9 +55,7 @@ export default function HeaderContent({
 					<Button type="text" size="large">
 						<Checkbox
 							checked={location}
-							onChange={() =>
-								set({ ...get(), location: !get().location })
-							}
+							onChange={() => submit("location", !location)}
 						>
 							定位
 						</Checkbox>
@@ -76,10 +78,7 @@ export default function HeaderContent({
 					<Button
 						type="text"
 						onClick={() =>
-							set({
-								...get(),
-								theme: theme === "dark" ? "light" : "dark"
-							})
+							submit("theme", theme === "dark" ? "light" : "dark")
 						}
 						size="large"
 						style={{

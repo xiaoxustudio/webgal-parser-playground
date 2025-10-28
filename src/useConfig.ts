@@ -4,20 +4,19 @@ import { persist } from "zustand/middleware";
 export interface ConfigStore {
 	location: boolean;
 	theme: "light" | "dark";
-	set: (state: ConfigStore) => void;
+}
+export interface ConfigActions {
 	get: () => ConfigStore;
+	change: (name: string, val: any) => void;
 }
 
-export const useConfigStore = create<ConfigStore>()(
+export const useConfigStore = create<ConfigStore & ConfigActions>()(
 	persist(
 		(set, get) => ({
 			location: false,
 			theme: "light",
-			set(state) {
-				set({
-					...state
-				});
-			},
+			change: (name: string, val: any) =>
+				set((state) => ({ ...state, [name]: val })),
 			get: () => get()
 		}),
 		{

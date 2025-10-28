@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import Layout from "antd/es/layout";
-import Splitter from "antd/es/splitter";
-import { Content } from "antd/es/layout/layout";
-
 import * as monaco from "monaco-editor";
-import Editor, { loader, type Monaco } from "@monaco-editor/react";
+
+import { loader, type Monaco } from "@monaco-editor/react";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
 import {
@@ -19,6 +17,9 @@ import HeaderContent from "./Header";
 import useConfigStore from "./useConfig";
 import type { IParserData } from "./interface";
 import "./assets/theme.css";
+// import TabsView from "./Tabs";
+import { EditorContext } from "./context";
+import ContentView from "./Content";
 
 const url = "https://data.jsdelivr.com/v1/package/npm/webgal-parser";
 
@@ -36,7 +37,7 @@ loader.init();
 function App() {
 	const { theme, location } = useConfigStore();
 
-	const currentText = useRef(defaultTextString);
+	const [currentText, setCurrentText] = useState(defaultTextString);
 	const onDidRef = useRef(null as any);
 	const WebgalParser = useRef(null as any); // 实例
 	const [loading, setLoading] = useState(true); // 加载状态
@@ -97,7 +98,7 @@ function App() {
 
 	function onChangeData(value?: string) {
 		if (value) {
-			currentText.current = value;
+			setCurrentText(value);
 			parseValue(value);
 		}
 	}
@@ -123,40 +124,29 @@ function App() {
 		}
 	};
 
-	useEffect(() => {
-		if (!editorRef.current) return;
-
-		if (location) {
-			onDidRef.current = editorRef.current.onDidChangeCursorPosition(
-				(e) => {
-					locateInRightEditor(e.position.lineNumber);
-				}
-			);
-		} else {
-			onDidRef.current?.dispose();
-			onDidRef.current = null;
-		}
-	}, [location, loading]);
+	const onChangeImported = useEffectEvent((data: any) => {
+		WebgalParser.current = new data.default(
+			() => {},
+			(fileName: string) => fileName,
+			[],
+			data.SCRIPT_CONFIG
+		);
+		// 重新解析
+		parseValue(currentText);
+	});
 
 	useEffect(() => {
 		if (!urlString) return;
 		setLoading(true);
 		import(/* @vite-ignore */ urlString)
 			.then((data) => {
-				WebgalParser.current = new data.default(
-					() => {},
-					(fileName: string) => fileName,
-					[],
-					data.SCRIPT_CONFIG
-				);
-				// 重新解析
-				parseValue(currentText.current);
+				onChangeImported(data);
 				setLoading(false);
 			})
 			.catch(() => {
 				setLoading(false);
 			});
-	}, [urlString]);
+	}, [urlString]); // eslint-disable-line
 
 	useEffect(() => {
 		if (editorRef.current) {
@@ -171,8 +161,24 @@ function App() {
 	}, [theme]);
 
 	useEffect(() => {
-		parseValue(currentText.current);
+		if (!editorRef.current || loading) return;
 
+		if (location) {
+			onDidRef.current = editorRef.current.onDidChangeCursorPosition(
+				(e) => locateInRightEditor(e.position.lineNumber)
+			);
+		} else {
+			onDidRef.current?.dispose();
+			onDidRef.current = null;
+		}
+		console.log(location);
+
+		return () => {
+			onDidRef.current?.dispose();
+		};
+	}, [location, loading]);
+
+	useEffect(() => {
 		setLoading(true);
 		fetch(url)
 			.then((res) => res.json())
@@ -180,61 +186,32 @@ function App() {
 				setParserList(data.versions);
 				setVersion(data.tags.latest);
 				setLoading(false);
+				parseValue(currentText);
 			});
-	}, []);
+	}, []); // eslint-disable-line
 
 	return (
-		<Layout style={{ height: "100vh" }}>
-			<HeaderContent
-				loading={loading}
-				version={version}
-				itemsList={itemsList}
-				parseTime={parseTime}
-			/>
-			<Splitter>
-				<Splitter.Panel defaultSize="40%" min="20%" max="70%">
-					<Content
-						style={{
-							padding: 0,
-							margin: 0,
-							height: "calc(100vh - 64px)",
-							overflow: "hidden"
-						}}
-					>
-						<Editor
-							onMount={handleEditorDidMount}
-							onChange={onChangeData}
-							defaultLanguage="webgal"
-							language="webgal"
-							defaultValue={currentText.current}
-							height="100%"
-							width="100%"
-						/>
-					</Content>
-				</Splitter.Panel>
-				<Splitter.Panel>
-					<Content
-						style={{
-							padding: 0,
-							margin: 0,
-							height: "calc(100vh - 64px)",
-							overflow: "hidden"
-						}}
-					>
-						<Editor
-							onMount={(editor) =>
-								(editorRightRef.current = editor)
-							}
-							defaultLanguage="json"
-							language="json"
-							value={parseDataString}
-							height="100%"
-							width="100%"
-						/>
-					</Content>
-				</Splitter.Panel>
-			</Splitter>
-		</Layout>
+		<EditorContext.Provider
+			value={{
+				handleEditorDidMount,
+				onChangeData,
+				currentText,
+				setCurrentText,
+				parseDataString,
+				editorRightRef
+			}}
+		>
+			<Layout style={{ height: "100vh" }}>
+				<HeaderContent
+					loading={loading}
+					version={version}
+					itemsList={itemsList}
+					parseTime={parseTime}
+				/>
+				{/* <TabsView /> */}
+				<ContentView />
+			</Layout>
+		</EditorContext.Provider>
 	);
 }
 
