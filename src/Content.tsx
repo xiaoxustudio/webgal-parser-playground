@@ -29,6 +29,7 @@ function ContentView() {
 						defaultLanguage="webgal"
 						language="webgal"
 						defaultValue={currentText}
+						value={currentText}
 						height="100%"
 						width="100%"
 					/>

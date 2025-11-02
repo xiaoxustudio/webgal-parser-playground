@@ -58,3 +58,7 @@ body {
 .ant-btn-variant-text:not(:disabled):not(.ant-btn-disabled):hover {
 	color: var(--webgal-playground-hover);
 }
+
+.ant-tabs-nav{
+	margin: 0;
+}

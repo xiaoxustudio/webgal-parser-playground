@@ -16,10 +16,10 @@ import defaultTextString from "./assets/demo_zh_cn.txt?raw";
 import HeaderContent from "./Header";
 import useConfigStore from "./useConfig";
 import type { IParserData } from "./interface";
-import "./assets/theme.css";
 // import TabsView from "./Tabs";
 import { EditorContext } from "./context";
 import ContentView from "./Content";
+import "./assets/theme.css";
 
 const url = "https://data.jsdelivr.com/v1/package/npm/webgal-parser";
 
@@ -31,6 +31,7 @@ self.MonacoEnvironment = {
 		return new editorWorker();
 	}
 };
+
 loader.config({ monaco });
 loader.init();
 
@@ -96,11 +97,9 @@ function App() {
 		setParseTime(performance.now() - startTime);
 	}
 
-	function onChangeData(value?: string) {
-		if (value) {
-			setCurrentText(value);
-			parseValue(value);
-		}
+	function onChangeData(value: string) {
+		setCurrentText(value);
+		parseValue(value);
 	}
 
 	const locateInRightEditor = (lineNumber: number) => {
