@@ -16,10 +16,11 @@ import defaultTextString from "./assets/demo_zh_cn.txt?raw";
 import HeaderContent from "./Header";
 import useConfigStore from "./useConfig";
 import type { IParserData } from "./interface";
-// import TabsView from "./Tabs";
-import { EditorContext } from "./context";
+import TabsView from "./Tabs";
+import { EditorContext, type FileItem } from "./context";
 import ContentView from "./Content";
 import "./assets/theme.css";
+import { ConfigProvider } from "antd";
 
 const url = "https://data.jsdelivr.com/v1/package/npm/webgal-parser";
 
@@ -38,7 +39,24 @@ loader.init();
 function App() {
 	const { theme, location } = useConfigStore();
 
-	const [currentText, setCurrentText] = useState(defaultTextString);
+	// 文件与活动文件
+	const [files, setFiles] = useState<FileItem[]>([
+		{
+			id: String(Date.now()),
+			name: "main.txt",
+			content: defaultTextString
+		}
+	]);
+	const [activeId, setActiveId] = useState<string>(() =>
+		files.length ? files[0].id : ""
+	);
+	const currentFile = useMemo(
+		() => files.find((f) => f.id === activeId),
+		[activeId, files]
+	);
+	const [currentText, setCurrentText] = useState(
+		currentFile?.content || defaultTextString
+	);
 	const onDidRef = useRef(null as any);
 	const WebgalParser = useRef(null as any); // 实例
 	const [loading, setLoading] = useState(true); // 加载状态
@@ -92,15 +110,72 @@ function App() {
 	function parseValue(val: string) {
 		if (!WebgalParser.current) return;
 		const startTime = performance.now();
-		const p = WebgalParser.current.parse(val, "test", "");
+		const p = WebgalParser.current.parse(
+			val,
+			currentFile?.name.replace(".txt", ""),
+			currentFile?.name
+		);
 		setParserData(p);
 		setParseTime(performance.now() - startTime);
 	}
 
 	function onChangeData(value: string) {
 		setCurrentText(value);
+		setFiles((prev) =>
+			prev.map((f) => (f.id === activeId ? { ...f, content: value } : f))
+		);
 		parseValue(value);
 	}
+
+	const addFile = () => {
+		const newFile: FileItem = {
+			id: String(Date.now()),
+			name: `untitled-${(files.length + 1).toString()}.txt`,
+			content: ""
+		};
+		setFiles((prev) => [...prev, newFile]);
+		setActiveId(newFile.id);
+		setCurrentText(newFile.content);
+		parseValue(newFile.content);
+	};
+
+	const removeFile = (id: string) => {
+		setFiles((prev) => {
+			if (prev.length <= 1) return prev; // 保留至少一个文件
+			const idx = prev.findIndex((f) => f.id === id);
+			const next = prev.filter((f) => f.id !== id);
+			// 如果删除的是当前文件，切换到相邻文件
+			if (id === activeId) {
+				const fallback = next[idx > 0 ? idx - 1 : 0] || {
+					id: "",
+					content: ""
+				};
+				setActiveId(fallback.id);
+				setCurrentText(fallback.content || "");
+				parseValue(fallback.content || "");
+			}
+			return next;
+		});
+	};
+
+	const renameFile = (id: string, name: string) => {
+		const safeName = name?.trim() || "untitled.txt";
+		const ensureTxt = safeName.endsWith(".txt")
+			? safeName
+			: `${safeName}.txt`;
+		setFiles((prev) =>
+			prev.map((f) => (f.id === id ? { ...f, name: ensureTxt } : f))
+		);
+	};
+
+	useEffect(() => {
+		// 当活动文件改变时，同步编辑器内容并解析
+		const active = files.find((f) => f.id === activeId);
+		if (active) {
+			setCurrentText(active.content);
+			parseValue(active.content);
+		}
+	}, [activeId]); // eslint-disable-line
 
 	const locateInRightEditor = (lineNumber: number) => {
 		const rightEditor = editorRightRef.current;
@@ -170,8 +245,6 @@ function App() {
 			onDidRef.current?.dispose();
 			onDidRef.current = null;
 		}
-		console.log(location);
-
 		return () => {
 			onDidRef.current?.dispose();
 		};
@@ -190,27 +263,49 @@ function App() {
 	}, []); // eslint-disable-line
 
 	return (
-		<EditorContext.Provider
-			value={{
-				handleEditorDidMount,
-				onChangeData,
-				currentText,
-				setCurrentText,
-				parseDataString,
-				editorRightRef
+		<ConfigProvider
+			theme={{
+				components: {
+					Button: {
+						colorPrimary: "var(--webgal-playground-primary-color)"
+					},
+					Tabs: {
+						colorPrimary: "var(--webgal-playground-primary-color)"
+					},
+					Input: {
+						colorPrimary: "var(--webgal-playground-primary-color)"
+					}
+				}
 			}}
 		>
-			<Layout style={{ height: "100vh" }}>
-				<HeaderContent
-					loading={loading}
-					version={version}
-					itemsList={itemsList}
-					parseTime={parseTime}
-				/>
-				{/* <TabsView /> */}
-				<ContentView />
-			</Layout>
-		</EditorContext.Provider>
+			<EditorContext.Provider
+				value={{
+					handleEditorDidMount,
+					onChangeData,
+					currentText,
+					setCurrentText,
+					parseDataString,
+					editorRightRef,
+					files,
+					activeId,
+					addFile,
+					removeFile,
+					setActiveId,
+					renameFile
+				}}
+			>
+				<Layout style={{ height: "100vh" }}>
+					<HeaderContent
+						loading={loading}
+						version={version}
+						itemsList={itemsList}
+						parseTime={parseTime}
+					/>
+					<TabsView />
+					<ContentView />
+				</Layout>
+			</EditorContext.Provider>
+		</ConfigProvider>
 	);
 }
 

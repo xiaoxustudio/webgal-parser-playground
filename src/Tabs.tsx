@@ -1,68 +1,83 @@
 import type { TabsProps } from "antd/es/tabs";
 import Tabs from "antd/es/tabs";
-
-import { useState } from "react";
+import Input from "antd/es/input";
+import { useContext, useMemo, useState, useCallback } from "react";
+import { EditorContext } from "./context";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
 function TabsView() {
-	const size = "small";
+	const { files, activeId, addFile, removeFile, setActiveId, renameFile } =
+		useContext(EditorContext);
 
-	const [activeKey, setActiveKey] = useState("1");
-	const [items, setItems] = useState<TabsProps["items"]>([
-		{
-			label: "Tab 1",
-			key: "1"
-		}
-	]);
+	const [editingId, setEditingId] = useState<string>("");
+	const [editingName, setEditingName] = useState<string>("");
 
-	const add = () => {
-		const newKey = String((items || []).length + 1);
-		setItems([
-			...(items || []),
-			{
-				label: `Tab ${newKey}`,
-				key: newKey,
-				children: `Content of editable tab ${newKey}`
-			}
-		]);
-		setActiveKey(newKey);
-	};
+	const startEdit = useCallback((id: string, name: string) => {
+		setEditingId(id);
+		setEditingName(name);
+	}, []);
 
-	const remove = (targetKey: TargetKey) => {
-		if (!items) {
-			return;
-		}
-		const targetIndex = items.findIndex((item) => item.key === targetKey);
-		const newItems = items.filter((item) => item.key !== targetKey);
+	const commitEdit = useCallback(() => {
+		if (!editingId) return;
+		renameFile(editingId, editingName);
+		setEditingId("");
+		setEditingName("");
+	}, [editingId, editingName, renameFile]);
 
-		if (newItems.length && targetKey === activeKey) {
-			const newActiveKey =
-				newItems[
-					targetIndex === newItems.length
-						? targetIndex - 1
-						: targetIndex
-				].key;
-			setActiveKey(newActiveKey);
-		}
+	const cancelEdit = useCallback(() => {
+		setEditingId("");
+		setEditingName("");
+	}, []);
 
-		setItems(newItems);
-	};
+	const items = useMemo<TabsProps["items"]>(
+		() =>
+			files.map((f) => ({
+				label:
+					editingId === f.id ? (
+						<Input
+							size="small"
+							autoFocus
+							value={editingName}
+							onChange={(e) => setEditingName(e.target.value)}
+							onBlur={commitEdit}
+							onPressEnter={commitEdit}
+							onKeyDown={(e) => {
+								if (e.key === "Escape") cancelEdit();
+							}}
+							onClick={(e) => e.stopPropagation()}
+						/>
+					) : (
+						<span
+							style={{ userSelect: "none" }}
+							onDoubleClick={() => startEdit(f.id, f.name)}
+						>
+							{f.name}
+						</span>
+					),
+				key: f.id,
+				closable: true
+			})),
+		[files, editingId, editingName, startEdit, commitEdit, cancelEdit]
+	);
 
 	const onEdit = (targetKey: TargetKey, action: "add" | "remove") => {
 		if (action === "add") {
-			add();
+			addFile();
 		} else {
-			remove(targetKey);
+			removeFile(String(targetKey));
 		}
 	};
 
 	return (
 		<Tabs
+			style={{
+				background: "var(--webgal-playground-background)"
+			}}
 			type="editable-card"
-			size={size}
-			activeKey={activeKey}
-			onChange={setActiveKey}
+			size="small"
+			activeKey={activeId}
+			onChange={setActiveId}
 			onEdit={onEdit}
 			items={items}
 		/>

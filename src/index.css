@@ -3,6 +3,7 @@
 	--webgal-playground-hover: #3a5369;
 	--webgal-playground-background: #f0f0f0;
 	--webgal-playground-border-bottom: #d9d9d9;
+	--webgal-playground-primary-color: #b5495b;
 	font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
 	line-height: 1.5;
 	font-weight: 400;
@@ -59,6 +60,7 @@ body {
 	color: var(--webgal-playground-hover);
 }
 
+/* tab */
 .ant-tabs-nav{
 	margin: 0;
 }

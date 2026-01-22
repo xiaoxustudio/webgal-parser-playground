@@ -19,7 +19,7 @@ function ContentView() {
 					style={{
 						padding: 0,
 						margin: 0,
-						height: "calc(100vh - 64px)",
+						height: "calc(100vh - 64px - 40px)",
 						overflow: "hidden"
 					}}
 				>
@@ -40,7 +40,7 @@ function ContentView() {
 					style={{
 						padding: 0,
 						margin: 0,
-						height: "calc(100vh - 64px)",
+						height: "calc(100vh - 64px - 40px)",
 						overflow: "hidden"
 					}}
 				>

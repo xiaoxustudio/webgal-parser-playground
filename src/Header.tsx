@@ -36,7 +36,7 @@ export default function HeaderContent({
 				align="center"
 			>
 				<Content>
-					<h2 style={{ color: "#b5495b" }}>
+					<h2 style={{ color: "var(--webgal-playground-primary-color)" }}>
 						<img
 							style={{ verticalAlign: "middle" }}
 							src={LogoImage}
