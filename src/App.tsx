@@ -81,6 +81,7 @@ function App() {
 
 	const [parserData, setParserData] = useState({});
 	const [parseTime, setParseTime] = useState(0); // 耗时
+	const parseTimerRef = useRef<number | null>(null);
 
 	const parseDataString = useMemo(
 		() => JSON.stringify(parserData, null, 2),
@@ -105,6 +106,7 @@ function App() {
 				theme: theme === "dark" ? "webgal-theme-dark" : "webgal-theme"
 			})
 		);
+		editor.setValue(currentText);
 	}
 
 	function parseValue(val: string) {
@@ -124,7 +126,13 @@ function App() {
 		setFiles((prev) =>
 			prev.map((f) => (f.id === activeId ? { ...f, content: value } : f))
 		);
-		parseValue(value);
+		if (parseTimerRef.current) {
+			clearTimeout(parseTimerRef.current);
+		}
+		parseTimerRef.current = window.setTimeout(() => {
+			parseValue(value);
+			parseTimerRef.current = null;
+		}, 150);
 	}
 
 	const addFile = () => {
@@ -173,6 +181,9 @@ function App() {
 		const active = files.find((f) => f.id === activeId);
 		if (active) {
 			setCurrentText(active.content);
+			if (editorRef.current) {
+				editorRef.current.setValue(active.content);
+			}
 			parseValue(active.content);
 		}
 	}, [activeId]); // eslint-disable-line

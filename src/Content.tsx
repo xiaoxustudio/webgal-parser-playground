@@ -7,7 +7,6 @@ import { useContext } from "react";
 function ContentView() {
 	const {
 		parseDataString,
-		currentText,
 		editorRightRef,
 		handleEditorDidMount,
 		onChangeData
@@ -28,8 +27,6 @@ function ContentView() {
 						onChange={onChangeData}
 						defaultLanguage="webgal"
 						language="webgal"
-						defaultValue={currentText}
-						value={currentText}
 						height="100%"
 						width="100%"
 					/>
