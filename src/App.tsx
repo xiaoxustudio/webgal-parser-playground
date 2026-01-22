@@ -1,5 +1,7 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import Layout from "antd/es/layout";
+import ConfigProvider from "antd/es/config-provider";
+import { theme as antdTheme } from "antd";
 import * as monaco from "monaco-editor";
 
 import { loader, type Monaco } from "@monaco-editor/react";
@@ -11,7 +13,6 @@ import {
 	initMonaco
 } from "./monoca";
 
-import classNames from "classnames";
 import defaultTextString from "./assets/demo_zh_cn.txt?raw";
 import HeaderContent from "./Header";
 import useConfigStore from "./useConfig";
@@ -20,7 +21,6 @@ import TabsView from "./Tabs";
 import { EditorContext, type FileItem } from "./context";
 import ContentView from "./Content";
 import "./assets/theme.css";
-import { ConfigProvider } from "antd";
 
 const url = "https://data.jsdelivr.com/v1/package/npm/webgal-parser";
 
@@ -228,10 +228,6 @@ function App() {
 				theme: theme === "dark" ? "webgal-theme-dark" : "webgal-theme"
 			});
 		}
-		// 设置根元素的class
-		document.documentElement.className = classNames({
-			dark: theme === "dark"
-		});
 	}, [theme]);
 
 	useEffect(() => {
@@ -294,6 +290,14 @@ function App() {
 					renameFile
 				}}
 			>
+			<ConfigProvider
+				theme={{
+					algorithm:
+						theme === "dark"
+							? antdTheme.darkAlgorithm
+							: antdTheme.defaultAlgorithm
+				}}
+			>
 				<Layout style={{ height: "100vh" }}>
 					<HeaderContent
 						loading={loading}
@@ -304,6 +308,7 @@ function App() {
 					<TabsView />
 					<ContentView />
 				</Layout>
+			</ConfigProvider>
 			</EditorContext.Provider>
 		</ConfigProvider>
 	);

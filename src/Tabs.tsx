@@ -3,12 +3,20 @@ import Tabs from "antd/es/tabs";
 import Input from "antd/es/input";
 import { useContext, useMemo, useState, useCallback } from "react";
 import { EditorContext } from "./context";
+import darkTheme from "./assets/dark.json";
+import whiteTheme from "./assets/white.json";
+import useConfigStore from "./useConfig";
 
 type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
 function TabsView() {
 	const { files, activeId, addFile, removeFile, setActiveId, renameFile } =
 		useContext(EditorContext);
+	const { theme } = useConfigStore();
+	const editorBg =
+		theme === "dark"
+			? (darkTheme as any).colors["editor.background"]
+			: (whiteTheme as any).colors["editor.background"];
 
 	const [editingId, setEditingId] = useState<string>("");
 	const [editingName, setEditingName] = useState<string>("");
@@ -71,9 +79,7 @@ function TabsView() {
 
 	return (
 		<Tabs
-			style={{
-				background: "var(--webgal-playground-background)"
-			}}
+			style={{ background: editorBg }}
 			type="editable-card"
 			size="small"
 			activeKey={activeId}

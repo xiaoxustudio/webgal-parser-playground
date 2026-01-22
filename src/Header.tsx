@@ -4,6 +4,8 @@ import { Content, Header } from "antd/es/layout/layout";
 import LogoImage from "./assets/icon-192.png";
 import packagejson from "../package.json";
 import useConfigStore from "./useConfig";
+import darkTheme from "./assets/dark.json";
+import whiteTheme from "./assets/white.json";
 
 export default function HeaderContent({
 	parseTime,
@@ -21,13 +23,17 @@ export default function HeaderContent({
 	const submit = (name: string, val: any) => {
 		change(name, val);
 	};
+	const editorBg =
+		theme === "dark"
+			? (darkTheme as any).colors["editor.background"]
+			: (whiteTheme as any).colors["editor.background"];
 
 	return (
 		<Header
 			style={{
 				display: "flex",
 				alignItems: "center",
-				background: "var(--webgal-playground-background)"
+				background: editorBg
 			}}
 		>
 			<Flex
