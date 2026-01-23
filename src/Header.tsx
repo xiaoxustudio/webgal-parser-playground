@@ -1,5 +1,5 @@
 import { BulbOutlined, GithubOutlined, ShareAltOutlined } from "@ant-design/icons";
-import { Flex, Button, Checkbox, Dropdown, message } from "antd";
+import { Flex, Button, Checkbox, Dropdown, message, Tooltip } from "antd";
 import { Content, Header } from "antd/es/layout/layout";
 import LogoImage from "./assets/icon-192.png";
 import packagejson from "../package.json";
@@ -85,59 +85,65 @@ export default function HeaderContent({
 					>
 						解析器版本：{loading ? "加载中" : version}
 					</Dropdown.Button>
-					<Button
-						type="text"
-						onClick={async () => {
-							try {
-								const active = files.find((f) => f.id === activeId) || files[0];
-								const payload = {
-									v: version,
-									files: files.map((f) => ({ n: f.name, c: f.content })),
-									active: active?.name
-								};
-								const json = JSON.stringify(payload);
-								const encoded = encodeURIComponent(encodeBase64Utf8(json));
-								const base = window.location.href.split("?")[0];
-								const shareUrl = `${base}?s=${encoded}`;
-								if (navigator.clipboard?.writeText) {
-									await navigator.clipboard.writeText(shareUrl);
-									message.success("分享链接已复制到剪贴板");
-								} else {
-									message.info(shareUrl);
+					<Tooltip title="分享链接">
+						<Button
+							type="text"
+							onClick={async () => {
+								try {
+									const active = files.find((f) => f.id === activeId) || files[0];
+									const payload = {
+										v: version,
+										files: files.map((f) => ({ n: f.name, c: f.content })),
+										active: active?.name
+									};
+									const json = JSON.stringify(payload);
+									const encoded = encodeURIComponent(encodeBase64Utf8(json));
+									const base = window.location.href.split("?")[0];
+									const shareUrl = `${base}?s=${encoded}`;
+									if (navigator.clipboard?.writeText) {
+										await navigator.clipboard.writeText(shareUrl);
+										message.success("分享链接已复制到剪贴板");
+									} else {
+										message.info(shareUrl);
+									}
+								} catch {
+									message.error("生成分享链接失败");
 								}
-							} catch {
-								message.error("生成分享链接失败");
+							}}
+							size="large"
+							style={{
+								fontSize: "20px"
+							}}
+						>
+							<ShareAltOutlined />
+						</Button>
+					</Tooltip>
+					<Tooltip title="切换主题">
+						<Button
+							type="text"
+							onClick={() =>
+								submit("theme", theme === "dark" ? "light" : "dark")
 							}
-						}}
-						size="large"
-						style={{
-							fontSize: "20px"
-						}}
-					>
-						<ShareAltOutlined />
-					</Button>
-					<Button
-						type="text"
-						onClick={() =>
-							submit("theme", theme === "dark" ? "light" : "dark")
-						}
-						size="large"
-						style={{
-							fontSize: "20px"
-						}}
-					>
-						<BulbOutlined />
-					</Button>
-					<Button
-						type="text"
-						onClick={() => window.open(packagejson.homepage)}
-						size="large"
-						style={{
-							fontSize: "20px"
-						}}
-					>
-						<GithubOutlined />
-					</Button>
+							size="large"
+							style={{
+								fontSize: "20px"
+							}}
+						>
+							<BulbOutlined />
+						</Button>
+					</Tooltip>
+					<Tooltip title="打开 GitHub">
+						<Button
+							type="text"
+							onClick={() => window.open(packagejson.homepage)}
+							size="large"
+							style={{
+								fontSize: "20px"
+							}}
+						>
+							<GithubOutlined />
+						</Button>
+					</Tooltip>
 				</Flex>
 			</Flex>
 		</Header>

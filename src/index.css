@@ -33,10 +33,10 @@
 
 body {
 	margin: 0;
-	display: flex;
-	place-items: center;
+	display: block;
 	min-width: 320px;
 	min-height: 100vh;
+	overflow: hidden;
 }
 
 @media (prefers-color-scheme: light) {
