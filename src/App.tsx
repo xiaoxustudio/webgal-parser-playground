@@ -21,6 +21,7 @@ import TabsView from "./Tabs";
 import { EditorContext, type FileItem } from "./context";
 import ContentView from "./Content";
 import "./assets/theme.css";
+import { decodeBase64Utf8 } from "./base64";
 
 const url = "https://data.jsdelivr.com/v1/package/npm/webgal-parser";
 
@@ -39,17 +40,44 @@ loader.init();
 function App() {
 	const { theme, location } = useConfigStore();
 
-	// 文件与活动文件
-	const [files, setFiles] = useState<FileItem[]>([
-		{
-			id: String(Date.now()),
-			name: "main.txt",
-			content: defaultTextString
+	const params = new URLSearchParams(window.location.search);
+	const s = params.get("s");
+	const now = Date.now();
+	let initialFiles: FileItem[] = [
+		{ id: String(now), name: "main.txt", content: defaultTextString }
+	];
+	let initialActiveId = initialFiles[0].id;
+	let initialVersion = "";
+	if (s) {
+		try {
+			const decoded = decodeBase64Utf8(s as string);
+			const data = JSON.parse(decoded);
+			if (Array.isArray(data?.files) && data.files.length) {
+				const base = Date.now();
+				initialFiles = data.files.map(
+					(f: { n: string; c: string }, idx: number) => ({
+						id: String(base + idx),
+						name: f.n?.endsWith(".txt") ? f.n : `${f.n}.txt`,
+						content: String(f.c ?? "")
+					})
+				);
+				const activeName =
+					typeof data.active === "string"
+						? data.active
+						: initialFiles[0]?.name;
+				const activeFile =
+					initialFiles.find((f) => f.name === activeName) ||
+					initialFiles[0];
+				initialActiveId = activeFile.id;
+			}
+			if (data?.v) initialVersion = String(data.v);
+		} catch {
+			/* empty */
 		}
-	]);
-	const [activeId, setActiveId] = useState<string>(() =>
-		files.length ? files[0].id : ""
-	);
+	}
+
+	const [files, setFiles] = useState<FileItem[]>(initialFiles);
+	const [activeId, setActiveId] = useState<string>(() => initialActiveId);
 	const currentFile = useMemo(
 		() => files.find((f) => f.id === activeId),
 		[activeId, files]
@@ -60,7 +88,7 @@ function App() {
 	const onDidRef = useRef(null as any);
 	const WebgalParser = useRef(null as any); // 实例
 	const [loading, setLoading] = useState(true); // 加载状态
-	const [version, setVersion] = useState(""); // 版本文本
+	const [version, setVersion] = useState(initialVersion); // 版本文本
 	const urlString = useMemo(
 		() =>
 			!version
@@ -263,12 +291,11 @@ function App() {
 			.then((res) => res.json())
 			.then((data: IParserData) => {
 				setParserList(data.versions);
-				setVersion(data.tags.latest);
+				setVersion((prev) => prev || data.tags.latest);
 				setLoading(false);
 				parseValue(currentText);
 			});
 	}, []); // eslint-disable-line
-
 	return (
 		<ConfigProvider
 			theme={{
@@ -301,25 +328,25 @@ function App() {
 					renameFile
 				}}
 			>
-			<ConfigProvider
-				theme={{
-					algorithm:
-						theme === "dark"
-							? antdTheme.darkAlgorithm
-							: antdTheme.defaultAlgorithm
-				}}
-			>
-				<Layout style={{ height: "100vh" }}>
-					<HeaderContent
-						loading={loading}
-						version={version}
-						itemsList={itemsList}
-						parseTime={parseTime}
-					/>
-					<TabsView />
-					<ContentView />
-				</Layout>
-			</ConfigProvider>
+				<ConfigProvider
+					theme={{
+						algorithm:
+							theme === "dark"
+								? antdTheme.darkAlgorithm
+								: antdTheme.defaultAlgorithm
+					}}
+				>
+					<Layout style={{ height: "100vh" }}>
+						<HeaderContent
+							loading={loading}
+							version={version}
+							itemsList={itemsList}
+							parseTime={parseTime}
+						/>
+						<TabsView />
+						<ContentView />
+					</Layout>
+				</ConfigProvider>
 			</EditorContext.Provider>
 		</ConfigProvider>
 	);

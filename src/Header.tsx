@@ -1,11 +1,14 @@
-import { BulbOutlined, GithubOutlined } from "@ant-design/icons";
-import { Flex, Button, Checkbox, Dropdown } from "antd";
+import { BulbOutlined, GithubOutlined, ShareAltOutlined } from "@ant-design/icons";
+import { Flex, Button, Checkbox, Dropdown, message } from "antd";
 import { Content, Header } from "antd/es/layout/layout";
 import LogoImage from "./assets/icon-192.png";
 import packagejson from "../package.json";
 import useConfigStore from "./useConfig";
 import darkTheme from "./assets/dark.json";
 import whiteTheme from "./assets/white.json";
+import { useContext } from "react";
+import { EditorContext } from "./context";
+import { encodeBase64Utf8 } from "./base64";
 
 export default function HeaderContent({
 	parseTime,
@@ -18,6 +21,7 @@ export default function HeaderContent({
 	version: string;
 	itemsList: any[];
 }) {
+	const { files, activeId } = useContext(EditorContext);
 	const { theme, location, change } = useConfigStore();
 	const parseTimeStr = parseTime.toFixed(2);
 	const submit = (name: string, val: any) => {
@@ -81,6 +85,37 @@ export default function HeaderContent({
 					>
 						解析器版本：{loading ? "加载中" : version}
 					</Dropdown.Button>
+					<Button
+						type="text"
+						onClick={async () => {
+							try {
+								const active = files.find((f) => f.id === activeId) || files[0];
+								const payload = {
+									v: version,
+									files: files.map((f) => ({ n: f.name, c: f.content })),
+									active: active?.name
+								};
+								const json = JSON.stringify(payload);
+								const encoded = encodeURIComponent(encodeBase64Utf8(json));
+								const base = window.location.href.split("?")[0];
+								const shareUrl = `${base}?s=${encoded}`;
+								if (navigator.clipboard?.writeText) {
+									await navigator.clipboard.writeText(shareUrl);
+									message.success("分享链接已复制到剪贴板");
+								} else {
+									message.info(shareUrl);
+								}
+							} catch {
+								message.error("生成分享链接失败");
+							}
+						}}
+						size="large"
+						style={{
+							fontSize: "20px"
+						}}
+					>
+						<ShareAltOutlined />
+					</Button>
 					<Button
 						type="text"
 						onClick={() =>
