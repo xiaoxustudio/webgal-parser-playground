@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 export interface ConfigStore {
 	location: boolean;
 	theme: "light" | "dark";
+	locale: string;
 }
 export interface ConfigActions {
 	get: () => ConfigStore;
@@ -15,6 +16,7 @@ export const useConfigStore = create<ConfigStore & ConfigActions>()(
 		(set, get) => ({
 			location: false,
 			theme: "light",
+			locale: "zh",
 			change: (name: string, val: any) =>
 				set((state) => ({ ...state, [name]: val })),
 			get: () => get()

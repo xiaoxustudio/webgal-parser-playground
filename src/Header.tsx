@@ -1,4 +1,8 @@
-import { BulbOutlined, GithubOutlined, ShareAltOutlined } from "@ant-design/icons";
+import {
+	BulbOutlined,
+	GithubOutlined,
+	ShareAltOutlined
+} from "@ant-design/icons";
 import { Flex, Button, Checkbox, Dropdown, message, Tooltip } from "antd";
 import { Content, Header } from "antd/es/layout/layout";
 import LogoImage from "./assets/icon-192.png";
@@ -9,6 +13,7 @@ import whiteTheme from "./assets/white.json";
 import { useContext } from "react";
 import { EditorContext } from "./context";
 import { encodeBase64Utf8 } from "./base64";
+import { t, getLocales, getLocaleName } from "./i18n";
 
 export default function HeaderContent({
 	parseTime,
@@ -22,7 +27,7 @@ export default function HeaderContent({
 	itemsList: any[];
 }) {
 	const { files, activeId } = useContext(EditorContext);
-	const { theme, location, change } = useConfigStore();
+	const { theme, location, locale, change } = useConfigStore();
 	const parseTimeStr = parseTime.toFixed(2);
 	const submit = (name: string, val: any) => {
 		change(name, val);
@@ -46,7 +51,11 @@ export default function HeaderContent({
 				align="center"
 			>
 				<Content>
-					<h2 style={{ color: "var(--webgal-playground-primary-color)" }}>
+					<h2
+						style={{
+							color: "var(--webgal-playground-primary-color)"
+						}}
+					>
 						<img
 							style={{ verticalAlign: "middle" }}
 							src={LogoImage}
@@ -60,14 +69,15 @@ export default function HeaderContent({
 				<Content> </Content>
 				<Flex justify="right">
 					<Button type="text" size="large">
-						耗时:{parseTimeStr}ms
+						{t("time_cost")}
+						{parseTimeStr}ms
 					</Button>
 					<Button type="text" size="large">
 						<Checkbox
 							checked={location}
 							onChange={() => submit("location", !location)}
 						>
-							定位
+							{t("locate")}
 						</Checkbox>
 					</Button>
 
@@ -83,31 +93,56 @@ export default function HeaderContent({
 						type="text"
 						size="large"
 					>
-						解析器版本：{loading ? "加载中" : version}
+						{t("parser_version")}
+						{loading ? t("loading") : version}
 					</Dropdown.Button>
-					<Tooltip title="分享链接">
+					<Dropdown.Button
+						menu={{
+							items: getLocales().map((l) => ({
+								key: l,
+								label: getLocaleName(l),
+								disabled: l === locale,
+								onClick: () => submit("locale", l)
+							}))
+						}}
+						type="text"
+						size="large"
+					>
+						{t("language")}
+					</Dropdown.Button>
+					<Tooltip title={t("share_link")}>
 						<Button
 							type="text"
 							onClick={async () => {
 								try {
-									const active = files.find((f) => f.id === activeId) || files[0];
+									const active =
+										files.find((f) => f.id === activeId) ||
+										files[0];
 									const payload = {
 										v: version,
-										files: files.map((f) => ({ n: f.name, c: f.content })),
+										files: files.map((f) => ({
+											n: f.name,
+											c: f.content
+										})),
 										active: active?.name
 									};
 									const json = JSON.stringify(payload);
-									const encoded = encodeURIComponent(encodeBase64Utf8(json));
-									const base = window.location.href.split("?")[0];
+									const encoded = encodeURIComponent(
+										encodeBase64Utf8(json)
+									);
+									const base =
+										window.location.href.split("?")[0];
 									const shareUrl = `${base}?s=${encoded}`;
 									if (navigator.clipboard?.writeText) {
-										await navigator.clipboard.writeText(shareUrl);
-										message.success("分享链接已复制到剪贴板");
+										await navigator.clipboard.writeText(
+											shareUrl
+										);
+										message.success(t("share_copied"));
 									} else {
 										message.info(shareUrl);
 									}
 								} catch {
-									message.error("生成分享链接失败");
+									message.error(t("share_failed"));
 								}
 							}}
 							size="large"
@@ -118,11 +153,14 @@ export default function HeaderContent({
 							<ShareAltOutlined />
 						</Button>
 					</Tooltip>
-					<Tooltip title="切换主题">
+					<Tooltip title={t("toggle_theme")}>
 						<Button
 							type="text"
 							onClick={() =>
-								submit("theme", theme === "dark" ? "light" : "dark")
+								submit(
+									"theme",
+									theme === "dark" ? "light" : "dark"
+								)
 							}
 							size="large"
 							style={{
@@ -132,7 +170,7 @@ export default function HeaderContent({
 							<BulbOutlined />
 						</Button>
 					</Tooltip>
-					<Tooltip title="打开 GitHub">
+					<Tooltip title={t("open_github")}>
 						<Button
 							type="text"
 							onClick={() => window.open(packagejson.homepage)}

@@ -60,6 +60,17 @@ body {
 	color: var(--webgal-playground-hover);
 }
 
+/* dark mode: increase contrast for header controls */
+:root.dark .ant-btn-variant-text:not(:disabled):not(.ant-btn-disabled),
+:root.dark .ant-dropdown-button,
+:root.dark .ant-checkbox-wrapper {
+	color: var(--webgal-playground-hover) !important;
+}
+:root.dark .ant-btn-variant-text .anticon,
+:root.dark .ant-dropdown-button .anticon {
+	color: var(--webgal-playground-hover) !important;
+}
+
 /* tab */
 .ant-tabs-nav{
 	margin: 0;
