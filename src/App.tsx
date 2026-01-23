@@ -102,9 +102,10 @@ function App() {
 			parserList.map((i, ind) => ({
 				key: i + ind,
 				label: i,
+				disabled: i === version,
 				onClick: () => setVersion(i)
 			})),
-		[parserList]
+		[parserList, version]
 	);
 
 	const [parserData, setParserData] = useState({});
