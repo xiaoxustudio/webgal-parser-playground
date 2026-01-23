@@ -2,6 +2,9 @@
 
 WebGAL Parser Playground 是一个用于测试和调试 WebGAL Parser 的在线工具。
 
+<img width="1910" height="873" alt="image" src="https://github.com/user-attachments/assets/5310290c-95d9-41f6-8494-0a76a7883b9f" />
+
+
 # 关于
 
 作者：[徐然](https://github.com/xiaoxustudio)  
