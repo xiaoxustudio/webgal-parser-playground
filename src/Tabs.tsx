@@ -23,12 +23,14 @@ function TabsView() {
 
 	const startEdit = useCallback((id: string, name: string) => {
 		setEditingId(id);
-		setEditingName(name);
+		const base = name.replace(/\.txt$/i, "");
+		setEditingName(base);
 	}, []);
 
 	const commitEdit = useCallback(() => {
 		if (!editingId) return;
-		renameFile(editingId, editingName);
+		const finalName = `${(editingName || "").trim()}.txt`;
+		renameFile(editingId, finalName);
 		setEditingId("");
 		setEditingName("");
 	}, [editingId, editingName, renameFile]);
@@ -43,18 +45,23 @@ function TabsView() {
 			files.map((f) => ({
 				label:
 					editingId === f.id ? (
-						<Input
-							size="small"
-							autoFocus
-							value={editingName}
-							onChange={(e) => setEditingName(e.target.value)}
-							onBlur={commitEdit}
-							onPressEnter={commitEdit}
-							onKeyDown={(e) => {
-								if (e.key === "Escape") cancelEdit();
-							}}
-							onClick={(e) => e.stopPropagation()}
-						/>
+						<span onClick={(e) => e.stopPropagation()}>
+							<Input
+								size="small"
+								autoFocus
+								value={editingName}
+								onChange={(e) =>
+									setEditingName(e.target.value.replace(/\.txt$/i, ""))
+								}
+								onBlur={commitEdit}
+								onPressEnter={commitEdit}
+								onKeyDown={(e) => {
+									if (e.key === "Escape") cancelEdit();
+								}}
+								style={{ width: 140 }}
+							/>
+							<span style={{ marginLeft: 4, userSelect: "none" }}>.txt</span>
+						</span>
 					) : (
 						<span
 							style={{ userSelect: "none" }}
